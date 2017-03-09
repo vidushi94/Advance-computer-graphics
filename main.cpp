@@ -1,8 +1,10 @@
-/*Name: Vidushi Panwar
-   ID: 109893361
-   class: csci173 */
+/*Bezier Curve
+  Name: Vidushi Panwar
+    class: csci173 */
+
 
 #include <string.h>
+
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -15,9 +17,11 @@
 
 using namespace std;
 
+/* GLUT function Headers */
+void mouse(int, int, int,int);
+void DrawPoints();
+
 bool WireFrame= false;
-float x,y,t,xp,yp,xpos,ypos,mx,my;
-float Wwidth, Wheight;
 
 const GLfloat light_ambient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
 const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -32,25 +36,25 @@ const GLfloat high_shininess[] = { 100.0f };
 
 /* GLUT callback Handlers */
 
-static void resize(int width, int height)
-{
+float xp[6]= {0.0,0.0,0.0,0.0,0.0,0.0};
+float yp[6] ={1.0,1.0,1.0,1.0,1.0,1.0};
+float Wwidth, Wheight;
+float mx, my;
+float t;
+int counter = 0;
+float xpos,ypos;
+
+static void resize(int width, int height){
     Wwidth = (float)width; // Global float Wwidth
     Wheight = (float)height; // Global float Wheight
-
-
-    float Ratio= Wwidth/Wheight;
-
-
+    double Ratio = Wwidth/Wheight;
     glViewport(0,0,(GLsizei) width,(GLsizei) height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective (45.0f,Ratio,0.1f, 100.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-
 }
-
 
 static void display(void)
 {
@@ -68,16 +72,41 @@ static void display(void)
     // your code here
 
     glPushMatrix();
+    DrawPoints();
+    glPopMatrix();
 
-    glTranslated(xpos,ypos,-1);
-    glutSolidSphere(0.2,40,40);
-    glColor3f(0,0,0.6);
+    glPushMatrix();
+    glColor3f(1, 0, 1);
+    glTranslated(xpos,ypos, -0.5);
+    glutSolidSphere(0.2,10,10);
+    glPopMatrix();
+
+    glPushMatrix();
+
+    glBegin(GL_POINTS);
+    glPointSize(4);
+
+
+    for(float a=0; a<=1; a+=0.0005)
+    {
+    glVertex3f(pow(1-a,5)*xp[0] + 5*pow(1-a,4)*a*xp[1] +10*pow(1-a,3)*a*a*xp[2] + 10*pow(1-a,2)*a*a*a*xp[3]+5*(1-a)*pow(a,4)*xp[4]+
+
+    pow(a,5)*xp[5],pow(1-a,5)*yp[0] + 5*pow(1-a,4)*a*yp[1] +10*pow(1-a,3)*a*a*yp[2] + 10*pow(1-a,2)*pow(a,3)*yp[3]+5*(1-a)*pow(a,4)*yp[4]+ pow(a,5)*yp[5],-0.5);
+
+        }
+
+
+
+        glEnd();
+
 
     glPopMatrix();
-    glEnd();
+
 
     glutSwapBuffers();
 }
+
+
 static void key(unsigned char key, int x, int y)
 {
     switch (key)
@@ -104,47 +133,19 @@ void Specialkeys(int key, int x, int y)
 }
 
 static void idle(void)
-{
-      t+= 0.001;
-    xpos =xp+t*(mx-xp);
-
-    ypos= yp+t*(my-yp);
-
-      glutPostRedisplay();
-}
-
-    void mouse(int btn , int state, int x , int y){
-        float scaler = (Wwidth/Wheight)*100;
-
-      // mx = (float)(x-Wwidth/2)/scaler ;
-      // my = (float)(Wheight/2 -y) /scaler;
-
-        mx = (float)(x-400)/100 ;
-        my = (float)(300 -y) /100;
-
-    switch(btn){
-        case GLUT_LEFT_BUTTON:
-
-
-            if(state == GLUT_DOWN){
-                t=0.0;
-
-                 xp = xpos;
-                 yp= ypos;
-            }
-            break;
+{   t+=0.001;
+    if(t<=1)
+    {
+    xpos = pow(1-t,5)*xp[0] + 5*pow(1-t,4)*t*xp[1] +10*pow(1-t,3)*t*t*xp[2] + 10*(1-t)*(1-t)*t*t*t*xp[3]+5*(1-t)*pow(t,4)*xp[4]+ pow(t,5)*xp[5];
+    ypos =pow(1-t,5)*yp[0] + 5*pow(1-t,4)*t*yp[1] +10*pow(1-t,3)*t*t*yp[2] + 10*(1-t)*(1-t)*t*t*t*yp[3]+5*(1-t)*pow(t,4)*yp[4]+ pow(t,5)*yp[5];
     }
-
-
-
-    glutPostRedisplay();
+glutPostRedisplay();
 }
 
 static void init(void)
 {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    //glClearColor(0.7,0.2,0.4,1);
 
     glEnable(GL_NORMALIZE);
     glEnable(GL_COLOR_MATERIAL);
@@ -166,12 +167,47 @@ static void init(void)
     glEnable(GL_LIGHT0);
     glEnable(GL_NORMALIZE);
     glEnable(GL_LIGHTING);
-    xpos=ypos=4;
-    x=y=0;
 
+    glClearColor(0.7, 0.1, 0.3, 0.2);
+}
+
+
+void DrawPoints(){
+    glPointSize(4);
+    glColor3f(1.0, 1.0, 0.0);
+
+    glBegin(GL_POINTS);
+    glVertex3f(xp[0], yp[0], -0.5);
+    glVertex3f(xp[1], yp[1], -0.5);
+    glVertex3f(xp[2], yp[2], -0.5);
+    glVertex3f(xp[3], yp[3], -0.5);
+    glVertex3f(xp[4], yp[4], -0.5);
+    glVertex3f(xp[5], yp[5], -0.5);
+
+    glEnd();
 
 }
 
+void mouse(int btn, int state, int x, int y){
+    // Create scaler value to help tranlate mouse coordiantes to OpenGL coordinates
+    float scaler = (Wwidth / Wheight) * 100;
+
+    // Calculate correct mouse positions based on windows size and scaler values.
+    mx = (float)(x-(Wwidth/2))/scaler;
+    my = (float)((Wheight/2)-y)/scaler;
+
+    switch(btn){
+        case GLUT_LEFT_BUTTON: // Creates event on left mouse click
+    if (state == GLUT_DOWN){
+                counter++;
+                counter = counter %6;
+                xp[counter] = mx;
+                yp[counter] = my;
+                t = 0;
+                break;
+            }
+    }
+}
 
 /* Program entry point */
 
@@ -188,10 +224,10 @@ int main(int argc, char *argv[])
     glutReshapeFunc(resize);
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
+    glutMouseFunc(mouse);
     glutSpecialFunc(Specialkeys);
 
-   glutMouseFunc(mouse);
-glutIdleFunc(idle);
+    glutIdleFunc(idle);
     glutMainLoop();
 
     return EXIT_SUCCESS;
